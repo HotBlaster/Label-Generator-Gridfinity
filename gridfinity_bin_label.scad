@@ -35,7 +35,7 @@ batch_label_data = [
 
 
 /* [Part customization] */
-Component = "phillips head bolt"; // [phillips head bolt, phillips wood screw, Wall Anchor, Torx wood screw, Phillips head countersunk, Socket head bolt, Hex head bolt, Dome head bolt, Flat Head countersunk, Standard washer, Spring washer, Standard nut, Lock nut, Heat set inserts, Torx head bolt, Countersunk Torx head bolt, None, Custom Text]
+Component = "phillips head bolt"; // [phillips head bolt, phillips wood screw, Wall Anchor, Torx wood screw, Torx panhead wood screw, Phillips head countersunk, Socket head bolt, Hex head bolt, Dome head bolt, Flat Head countersunk, Standard washer, Spring washer, Standard nut, Lock nut, Heat set inserts, Torx head bolt, Countersunk Torx head bolt, None, Custom Text]
 diameter = "M4";  // free text, e.g. "1/4-20", "#8-32"
 hardware_length = 24;
 
@@ -83,8 +83,8 @@ if (batch_export) {
     generate_multiple_labels();
 } else {
     label(
-        length          = length, 
-        width           = width, 
+        length          = length,
+        width           = width,
         height          = height,
         radius          = radius,
         champfer        = champfer,
@@ -108,20 +108,20 @@ function getDimensions(Y_units) =
 //            BATCH LABEL GENERATION (Multiple)            //
 //////////////////////////////////////////////////////////////
 module generate_multiple_labels() {
-    columns           = 3;              
-    horizontal_offset = length + 3;     
-    vertical_offset   = 12;            
+    columns           = 3;
+    horizontal_offset = length + 3;
+    vertical_offset   = 12;
 
     for (i = [0 : len(batch_label_data) - 1]) {
         label_parameters = batch_label_data[i];
-        
+
         row = i / columns;
         col = i % columns;
-        
+
         translate([col * horizontal_offset, row * -vertical_offset, 0]) {
             label(
-                length          = length, 
-                width           = width, 
+                length          = length,
+                width           = width,
                 height          = height,
                 radius          = radius,
                 champfer        = champfer,
@@ -229,6 +229,7 @@ module choose_Part_version(Part_version, hardware_length, width, height, diamete
     } else if (Part_version == "Heat set inserts") {
         Heat_Set_Inserts(hardware_length, width, height);
         bolt_text(diameter, hardware_length, height);
+
     } else if (Part_version == "Wall Anchor") {
         Wall_Anchor(hardware_length, width, height);
         bolt_text(diameter, hardware_length, height);
@@ -240,6 +241,10 @@ module choose_Part_version(Part_version, hardware_length, width, height, diamete
     } else if (Part_version == "Torx wood screw") {
         Torx_Wood_Screw(hardware_length, width, height);
         bolt_text(diameter, hardware_length, height);
+
+    } else if (Part_version == "Torx panhead wood screw") {
+        Torx_Panhead_Wood_Screw(hardware_length, width, height);
+        bolt_text(diameter, hardware_length, height);
     }
 }
 
@@ -250,7 +255,7 @@ module choose_Part_version(Part_version, hardware_length, width, height, diamete
 module standard_Nut(width, height, vertical_offset = 2.5) {
     translate([-2.5, vertical_offset, height]) {
         // top view
-        difference() {    
+        difference() {
             cylinder(h=text_height, d=5, $fn=6);
             cylinder(h=text_height, d=3);
         }
@@ -263,7 +268,7 @@ module standard_Nut(width, height, vertical_offset = 2.5) {
 module lock_Nut(width, height, vertical_offset = 2.5) {
     translate([-2.5, vertical_offset, height]) {
         // top view
-        difference() {    
+        difference() {
             cylinder(h=text_height, d=5, $fn=6);
             cylinder(h=text_height, d=3);
         }
@@ -382,8 +387,8 @@ module drawBoltStem(hardware_length, text_height, start=[7, -1.25, 0], thickness
 
         // Second partial segment
         translate([
-            start[0] + segmentLength + gapBetween, 
-            start[1], 
+            start[0] + segmentLength + gapBetween,
+            start[1],
             start[2]
         ])
             cube([segmentLength, thickness, text_height]);
@@ -405,8 +410,8 @@ module Torx_star(points, point_len, height=2, rnd=0.1) {
         rotate([0, 0, i * point_deg])
         translate([0, -point_len, 0])
             point(point_deg_adjusted, point_len, rnd, height, fn);
-    }  
-    
+    }
+
     module point(deg, leng, rnd, height, fn=25) {
     hull() {
         cylinder(height, d=rnd, $fn=fn); // Base cylinder at the center
@@ -575,20 +580,20 @@ module Phillips_head_countersunk(hardware_length, width, height, vertical_offset
 }
 
 
-//Philips wood screw 
+//Philips wood screw
 module Phillips_Wood_Screw(hardware_length, width, height, vertical_offset = 2.5) {
     // We'll place everything in "real" X after we clamp a final stem length
     display_length = (hardware_length > 20) ? 20 : hardware_length;
-    
+
     // The start of the main stem
     stemStart = [5, -1.25, 0];
 
     // We want to shorten the actual stem by 1.5 for the tip
     // Then clamp it to the same maxLen logic used in drawBoltStem
     maxLen    = 20 * Y_units;
-    rawStem   = hardware_length - 1.5;  
+    rawStem   = hardware_length - 1.5;
     finalStem = (rawStem > maxLen) ? maxLen : rawStem;
-    
+
     translate([-display_length/2 - 2, vertical_offset, height]) {
         // Head (top view)
         difference() {
@@ -619,20 +624,20 @@ module Phillips_Wood_Screw(hardware_length, width, height, vertical_offset = 2.5
     }
 }
 
-//Torx wood screw 
+//Torx wood screw
 module Torx_Wood_Screw(hardware_length, width, height, vertical_offset = 2.5) {
     // We'll place everything in "real" X after we clamp a final stem length
     display_length = (hardware_length > 20) ? 20 : hardware_length;
-    
+
     // The start of the main stem
     stemStart = [5, -1.25, 0];
 
     // We want to shorten the actual stem by 1.5 for the tip
     // Then clamp it to the same maxLen logic used in drawBoltStem
     maxLen    = 20 * Y_units;
-    rawStem   = hardware_length - 1.5;  
+    rawStem   = hardware_length - 1.5;
     finalStem = (rawStem > maxLen) ? maxLen : rawStem;
-    
+
     translate([-display_length/2 - 2, vertical_offset, height]) {
         // top view (torx head)
         difference() {
@@ -648,6 +653,47 @@ module Torx_Wood_Screw(hardware_length, width, height, vertical_offset = 2.5) {
         drawBoltStem(rawStem, text_height, stemStart);
 
         // Place tip exactly at the end of that final stem
+        translate([stemStart[0] + finalStem, 0, 0]) {
+            linear_extrude(height=text_height)
+                polygon(
+                    points = [[0,  1.25],[2, 0],[0, -1.25]],
+                    paths  = [[0, 1, 2]]
+                );
+        }
+    }
+}
+
+// Torx panhead wood screw
+module Torx_Panhead_Wood_Screw(hardware_length, width, height, vertical_offset = 2.5) {
+    display_length = (hardware_length > 20) ? 20 : hardware_length;
+
+    // Start position of the stem (a bit further right than countersunk)
+    stemStart = [6, -1.25, 0];
+
+    // Shorten by 1.5 for the tip, clamp like drawBoltStem does
+    maxLen    = 20 * Y_units;
+    rawStem   = (hardware_length > 1.5) ? (hardware_length - 1.5) : 0;
+    finalStem = (rawStem > maxLen) ? maxLen : rawStem;
+
+    translate([-display_length/2 - 2, vertical_offset, height]) {
+        // top view (torx head)
+        difference() {
+            cylinder(h=text_height, d=5);
+            Torx_star(6, 2, height=2, rnd=0.1);
+        }
+
+        // side view (pan head profile)
+        translate([6, 0, 0]) {
+            difference() {
+                cylinder(h=text_height, d=5);
+                translate([0, -2.5, 0]) cube([4, 5, text_height]);
+            }
+        }
+
+        // stem (uses same split-logic if it gets too long)
+        drawBoltStem(rawStem, text_height, stemStart);
+
+        // tip at the end of the clamped stem
         translate([stemStart[0] + finalStem, 0, 0]) {
             linear_extrude(height=text_height)
                 polygon(
@@ -674,7 +720,7 @@ module bolt_text(diameter, Length, height) {
 module nut_text(diameter, height) {
     translate([0, -3, height])
         linear_extrude(height=text_height)
-            text(diameter, 
+            text(diameter,
                  size   = text_size,
                  font   = Font,
                  valign = "center",
@@ -699,20 +745,20 @@ module labelbase(length, width, height, radius, champfer) {
     // Extra perimeter shape
     translate([(-length - 2)/2, -5.7/2, 0]) {
         __shapeWithChampfer(
-            length+2, 
-            5.7, 
-            height, 
-            0.2, 
+            length+2,
+            5.7,
+            height,
+            0.2,
             champfer
         );
     }
     // Main label shape
     translate([(-length)/2, -width/2, 0]) {
         __shapeWithChampfer(
-            length, 
-            width, 
-            height, 
-            radius, 
+            length,
+            width,
+            height,
+            radius,
             champfer
         );
     }
