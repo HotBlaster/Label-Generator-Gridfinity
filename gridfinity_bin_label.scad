@@ -35,7 +35,7 @@ batch_label_data = [
 
 
 /* [Part customization] */
-Component = "phillips head bolt"; // [phillips head bolt, phillips wood screw, Wall Anchor, Torx wood screw, Torx panhead wood screw, Phillips head countersunk, Socket head bolt, Hex head bolt, Dome head bolt, Flat Head countersunk, Standard washer, Spring washer, Standard nut, Lock nut, Heat set inserts, Torx head bolt, Countersunk Torx head bolt, None, Custom Text]
+Component = "phillips head bolt"; // [phillips head bolt, phillips wood screw, Wall Anchor, Torx wood screw, Torx panhead wood screw, Phillips head countersunk, Socket head bolt, Hex head bolt, Dome head bolt, Flat Head countersunk, Standard washer, Spring washer, Compression spring, Standard nut, Lock nut, Heat set inserts, Torx head bolt, Countersunk Torx head bolt, None, Custom Text]
 diameter = "M4";  // free text, e.g. "1/4-20", "#8-32"
 hardware_length = 24;
 
@@ -218,6 +218,10 @@ module choose_Part_version(Part_version, hardware_length, width, height, diamete
         spring_washer(width, height);
         washer_text(diameter, height);
 
+    } else if (Part_version == "Compression spring") {
+        Compression_Spring(hardware_length, width, height);
+        bolt_text(diameter, hardware_length, height);
+
     } else if (Part_version == "Standard nut") {
         standard_Nut(width, height);
         nut_text(diameter, height);
@@ -305,6 +309,94 @@ module spring_washer(width, height, vertical_offset = 2.5) {
         // side view
         translate([4, -2.5, 0])
             cube([1, 5, text_height]);
+    }
+}
+
+function compression_spring_path(turns=7, pitch=1.35, radius_x=0.72, radius_y=1.75, samples_per_turn=18) =
+    let(
+        steps = turns * samples_per_turn,
+        start_x = -turns * pitch / 2
+    )
+    [for (i = [0 : steps])
+        let(t = 360 * turns * i / steps)
+        [start_x + pitch * t / 360 + radius_x * sin(t), -radius_y * cos(t)]];
+
+function compression_spring_end_ellipse(center_x, center_y=0, radius_x=0.72, radius_y=1.75, samples=36, phase=0) =
+    [for (i = [0 : samples])
+        let(t = phase + 360 * i / samples)
+        [center_x + radius_x * cos(t), center_y + radius_y * sin(t)]];
+
+module rounded_stroke(points, thickness, height) {
+    for (i = [0 : len(points) - 2]) {
+        hull() {
+            translate([points[i][0], points[i][1], 0])
+                cylinder(h=height, d=thickness);
+            translate([points[i + 1][0], points[i + 1][1], 0])
+                cylinder(h=height, d=thickness);
+        }
+    }
+}
+
+module Compression_Spring(hardware_length, width, height, vertical_offset = 2.5) {
+    spring_turns = 7;
+    spring_pitch = 2.35;
+    spring_radius_x = 1.30;
+    spring_radius_y = 2.25;
+    spring_start_x = -spring_turns * spring_pitch / 2;
+    spring_end_x = spring_start_x + spring_turns * spring_pitch;
+    terminal_gap = 0.25;
+    left_terminal_x = spring_start_x - terminal_gap - spring_radius_x;
+    right_terminal_x = spring_end_x + terminal_gap + spring_radius_x;
+    connector_x_offset = spring_radius_x * 0.50;
+    connector_y = -spring_radius_y * 0.87;
+    stroke = 0.60;
+
+    translate([0, vertical_offset, height]) {
+        rounded_stroke(
+            compression_spring_end_ellipse(
+                center_x = left_terminal_x,
+                radius_x = spring_radius_x,
+                radius_y = spring_radius_y
+            ),
+            thickness = stroke,
+            height = text_height
+        );
+
+        rounded_stroke(
+            [[left_terminal_x + connector_x_offset, connector_y],
+             [spring_start_x, -spring_radius_y]],
+            thickness = stroke,
+            height = text_height
+        );
+
+        rounded_stroke(
+            compression_spring_path(
+                turns = spring_turns,
+                pitch = spring_pitch,
+                radius_x = spring_radius_x,
+                radius_y = spring_radius_y,
+                samples_per_turn = 20
+            ),
+            thickness = stroke,
+            height = text_height
+        );
+
+        rounded_stroke(
+            [[spring_end_x, -spring_radius_y],
+             [right_terminal_x - connector_x_offset, connector_y]],
+            thickness = stroke,
+            height = text_height
+        );
+
+        rounded_stroke(
+            compression_spring_end_ellipse(
+                center_x = right_terminal_x,
+                radius_x = spring_radius_x,
+                radius_y = spring_radius_y
+            ),
+            thickness = stroke,
+            height = text_height
+        );
     }
 }
 
